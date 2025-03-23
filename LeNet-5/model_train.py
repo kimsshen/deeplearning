@@ -142,8 +142,7 @@ def train_model_process(model,train_dataloader,val_dataloader,num_epochs):
 
     #选择最有参数
     #加载最高准确率下的模型参数
-    model.load_state_dict(best_model_wts)
-    torch.save(model.load_state_dict(best_model_wts),'./best_model.pth')
+    torch.save(best_model_wts,'./best_model.pth')
 
     print(
         len(range(num_epochs)),
@@ -184,7 +183,7 @@ if __name__== "__main__":
     #将模型实例化
     LeNet = LeNet()
     train_dataloader,val_dataloader = train_val_data_process()
-    train_process = train_model_process(LeNet,train_dataloader,val_dataloader,100)
+    train_process = train_model_process(LeNet,train_dataloader,val_dataloader,20)
     matplot_acc_loss(train_process)
 
 
