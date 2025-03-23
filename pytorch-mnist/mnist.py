@@ -26,21 +26,24 @@ class Net(torch.nn.Module):#继承
 def get_data_loader(is_train):
     to_tensor=transforms.Compose([transforms.ToTensor()])
     data_set=MNIST(root='mnist_data/', train=is_train, download=True, transform=to_tensor)
+    #print(f"data_set={data_set}")
     return DataLoader(data_set, batch_size=15, shuffle=True, pin_memory=True)
 
 def evaluate(test_data,net):
     net.eval()  # 将模型设置为评估模式
-    n_correct=0
-    n_total=0
-    #n_correct：用于记录模型预测正确的样本数量。
-    #n_total：用于记录测试样本的总数量。
+    n_correct=0  #用于记录模型预测正确的样本数量
+    n_total=0  #用于记录测试样本的总数量
     with torch.no_grad():#禁用梯度计算。在评估模型时，我们不需要计算梯度，因为不会进行反向传播。使用 torch.no_grad() 可以节省内存并提高计算效率。
-        for (x,y) in test_data:
-            x, y = x.to(device), y.to(device)  # 移动数据到设备
+        for (images,labels) in test_data:
+            x, y = images.to(device), labels.to(device)  # 移动数据到设备
             outputs = net.forward(x.view(-1,28*28))
             for i,output in enumerate(outputs):
                 if torch.argmax(output) == y[i]:
                     n_correct += 1
+                #else:
+                    # 将识别错误的样例打印了出来
+                    #img = images[i][0]
+                    #print(f"wrong case: predict = {torch.argmax(output)}, y={y[i]}")
                 n_total+=1
     return n_correct / n_total
 
@@ -49,19 +52,21 @@ def main():
     test_data = get_data_loader(is_train=False) #获取测试数据
     net = Net().to(device)# 将模型移动到选择的设备
 
-
+    #训练前模型的测试效果
     print("initial accuracy:",evaluate(test_data,net))
     optimizer =torch.optim.Adam(net.parameters(),lr=0.001)
 
-    for epoch in range(2):
+    for epoch in range(5):
         net.train()  # 将模型设置为训练模式
-        for(x,y) in train_data:
+        for (x,y) in train_data:
+            print("image:", x, "label:", y)
             x, y = x.to(device), y.to(device)  # 移动数据到设备
             net.zero_grad()#初始化
             outputs = net.forward(x.view(-1,28*28))#正向传播
             loss=torch.nn.functional.nll_loss(outputs,y)#计算差值
             loss.backward()#反向误差传播
             optimizer.step()#优化网络参数
+        #每一轮训练后模型的测试效果
         print("epoch:",epoch,"accuracy:",evaluate(test_data,net))
 
     plt.figure(figsize=(10, 5))
