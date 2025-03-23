@@ -63,9 +63,25 @@ if __name__=="__main__":
     #加载模型和测试集
     test_model_process(model, test_dataloader)
 
+    #测试用到的设备，有GPU用GPU，没有GPU用CPU
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = model.to(device)
 
+    classes = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat', 'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
+    with torch.no_grad():
+        for b_x,b_y in test_dataloader:
+            b_x = b_x.to(device)
+            b_y = b_y.to(device)
 
+            #设置模型为验证模式
+            model.eval()
+            output = model(b_x)
 
+            # 查找每一行中最大值对应的行标
+            pre_lab = torch.argmax(output, dim=1)
+            result = pre_lab.item()
+            label = b_y.item()
+            print("预测值：", classes[result], "------","真实值：", classes[label])
 
 
 
