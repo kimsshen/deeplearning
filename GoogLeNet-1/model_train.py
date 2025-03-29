@@ -193,5 +193,5 @@ if __name__ == '__main__':
     # 加载数据集
     train_data, val_data = train_val_data_process()
     # 利用现有的模型进行模型的训练
-    train_process = train_model_process(GoogLeNet, train_data, val_data, num_epochs=20)
+    train_process = train_model_process(GoogLeNet, train_data, val_data, num_epochs=100)
     matplot_acc_loss(train_process)

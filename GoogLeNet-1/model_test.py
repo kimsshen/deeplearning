@@ -5,16 +5,18 @@ from torchvision.datasets import FashionMNIST
 from model import GoogLeNet, Inception
 from torchvision.datasets import ImageFolder
 from PIL import Image
+from mydataset import MyDataset
+
 
 def test_data_process():
     # 定义数据集的路径
-    ROOT_TRAIN = r'data\test'
+    ROOT_TRAIN = r'data/test'
 
     normalize = transforms.Normalize([0.162, 0.151, 0.138], [0.058, 0.052, 0.048])
     # 定义数据集处理方法变量
     test_transform = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor(), normalize])
     # 加载数据集
-    test_data = ImageFolder(ROOT_TRAIN, transform=test_transform)
+    test_data = MyDataset(root=ROOT_TRAIN, transform=test_transform)
 
     test_dataloader = Data.DataLoader(dataset=test_data,
                                        batch_size=1,
@@ -36,7 +38,7 @@ def test_model_process(model, test_dataloader):
 
     # 只进行前向传播计算，不计算梯度，从而节省内存，加快运行速度
     with torch.no_grad():
-        for test_data_x, test_data_y in test_dataloader:
+        for test_data_x, test_data_y, filename in test_dataloader:
             # 将特征放入到测试设备中
             test_data_x = test_data_x.to(device)
             # 将标签放入到测试设备中
@@ -70,7 +72,7 @@ if __name__ == "__main__":
     model = model.to(device)
     classes = ['猫', '狗']
     with torch.no_grad():
-        for b_x, b_y in test_dataloader:
+        for b_x, b_y ,filename in test_dataloader:
             b_x = b_x.to(device)
             b_y = b_y.to(device)
 
@@ -80,7 +82,7 @@ if __name__ == "__main__":
             pre_lab = torch.argmax(output, dim=1)
             result = pre_lab.item()
             label = b_y.item()
-            print("预测值：",  classes[result], "------", "真实值：", classes[label])
+            print("样本名：",filename, "----预测值：",  classes[result], "------", "真实值：", classes[label])
 
     image = Image.open('1.jfif')
 
@@ -91,6 +93,7 @@ if __name__ == "__main__":
 
     # 添加批次维度
     image = image.unsqueeze(0)
+    print(image.shape)
 
     with torch.no_grad():
         model.eval()
