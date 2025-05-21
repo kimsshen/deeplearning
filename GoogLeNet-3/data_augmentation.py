@@ -3,13 +3,18 @@ import os
 import albumentations as A
 from tqdm import tqdm  # 进度条工具
 
+
+
 # 定义增强管道
 transform = A.Compose([
-    A.HorizontalFlip(p=0.5),
-    A.RandomBrightnessContrast(p=0.3),
-    A.Rotate(limit=30, p=0.5),
-    A.RandomResizedCrop(size=(256, 256), scale=(0.8, 1.0)),
-    #A.Cutout(num_holes=8, max_h_size=16, max_w_size=16, p=0.3)
+    A.HorizontalFlip(p=0.5), #以50%的概率水平翻转
+    A.RandomBrightnessContrast(p=0.3), #以 30% 的概率改变图像的亮度和对比度。
+    A.Rotate(limit=30, p=0.5),#以 50% 的概率将图像旋转最多 30 度
+    A.RandomResizedCrop(size=(256, 256), scale=(0.8, 1.0)), #从原图中随机裁剪一块区域，然后将其缩放到 256x256 像素，缩放比例在 0.8 到 1.0 之间
+    A.CoarseDropout(max_holes=8,  # 最大遮挡区域数量
+        hole_size=(20, 40),  # 每个遮挡区域的大小范围（像素）
+        fill_value=0  # 遮挡区域填充值，默认为0（黑色）
+    )
 ])
 
 
