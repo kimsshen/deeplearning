@@ -15,7 +15,9 @@ def train_val_data_process():
     # 定义数据集的路径
     ROOT_TRAIN = r'data/train'
 
-    normalize = transforms.Normalize([0.22890568,0.19639583,0.1433638], [0.09950783,0.07997292,0.06596899])
+    normalize = transforms.Normalize(  #标准化
+        [0.06293471,0.04216562,0.03434444], #数据集的均值
+        [0.01638009,0.00949219,0.00602268])  #数据集的标准差
     # 定义数据集处理方法变量
     train_transform = transforms.Compose([transforms.Resize((224,224)), transforms.ToTensor(), normalize])
     # 加载数据集

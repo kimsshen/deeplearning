@@ -69,7 +69,7 @@ class GoogLeNet(nn.Module):
             Inception(832, 384, (192, 384), (48, 128), 128),
             nn.AdaptiveAvgPool2d((1, 1)),
             nn.Flatten(),
-            nn.Linear(1024, 5)) #5分类
+            nn.Linear(1024, 6)) #6分类
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):

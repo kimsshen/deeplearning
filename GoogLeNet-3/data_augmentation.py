@@ -45,7 +45,9 @@ def batch_augment_albumentations(input_dir, output_dir, augment_times=10):
 
                 # 生成多次增强结果
                 for i in range(augment_times):
+                    # 应用变换并获取结果
                     augmented = transform(image=image)
+                    # 提取增强后的图像
                     aug_image = augmented["image"]
 
                     # 保存增强后的图像
@@ -58,7 +60,7 @@ def batch_augment_albumentations(input_dir, output_dir, augment_times=10):
 
 # 使用示例
 batch_augment_albumentations(
-    input_dir=r'e:\Code\Github\deeplearning\GoogLeNet-3\beads',
-    output_dir=r'e:\Code\Github\deeplearning\GoogLeNet-3\data\train',
-    augment_times=10
+    input_dir=r'e:\Code\Github\deeplearning\GoogLeNet-3\beads_origin',
+    output_dir=r'e:\Code\Github\deeplearning\GoogLeNet-3\beads_aug',
+    augment_times=200
 )

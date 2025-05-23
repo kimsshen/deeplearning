@@ -12,7 +12,9 @@ def test_data_process():
     # 定义数据集的路径
     ROOT_TRAIN = r'data/test'
 
-    normalize = transforms.Normalize([0.22890568,0.19639583,0.1433638], [0.09950783,0.07997292,0.06596899])
+    normalize = transforms.Normalize(  #标准化
+        [0.06293471,0.04216562,0.03434444], #数据集的均值
+        [0.01638009,0.00949219,0.00602268])  #数据集的标准差
     # 定义数据集处理方法变量
     test_transform = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor(), normalize])
     # 加载数据集
@@ -70,7 +72,7 @@ if __name__ == "__main__":
     # 设定测试所用到的设备，有GPU用GPU没有GPU用CPU
     device = "cuda" if torch.cuda.is_available() else 'cpu'
     model = model.to(device)
-    classes = ['苹果', '香蕉', '葡萄', '橘子', '梨子']
+    classes = ['A', 'F', 'G', 'H', 'I']
     with torch.no_grad():
         for b_x, b_y ,filename in test_dataloader:
             b_x = b_x.to(device)
@@ -86,7 +88,9 @@ if __name__ == "__main__":
 
     image = Image.open('images.jpg')
 
-    normalize = transforms.Normalize([0.22890568,0.19639583,0.1433638], [0.09950783,0.07997292,0.06596899])
+    normalize = transforms.Normalize(  #标准化
+        [0.06293471,0.04216562,0.03434444], #数据集的均值
+        [0.01638009,0.00949219,0.00602268])  #数据集的标准差
     # 定义数据集处理方法变量
     test_transform = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor(), normalize])
     image = test_transform(image)
