@@ -36,8 +36,11 @@ class PackagingDetectionSystem:
             raise FileNotFoundError(f"模型文件不存在: {model_path}")
         
         # 加载训练好的YOLOv5模型,custom是指本地文件，model_path是指本地模型的路径
-        self.model = torch.hub.load('ultralytics/yolov5', 'custom', path=model_path)
-        
+        try:
+            self.model = torch.hub.load('yolov5', 'custom', path=model_path, source='local', trust_repo=True)
+        except Exception as e:
+            logger.error(f"加载模型失败: {str(e)}")
+            exit(1)
         # 设置模型参数
         self.model.conf = conf_threshold  # 置信度阈值
         self.model.iou = iou_threshold    # IOU阈值
@@ -400,7 +403,7 @@ if __name__ == "__main__":
     # 配置参数
     CLASS_NAMES = ['rainbow', 'shell', 'unicorn', 'moon', 'ends']  # 5种包装类型
 
-    # 使用预训练模型
+    #使用预训练模型
     model_path = "packaging_models/best.pt"
     
     #初始化检测系统
