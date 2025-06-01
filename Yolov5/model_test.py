@@ -35,7 +35,7 @@ class PackagingDetectionSystem:
         if not Path(model_path).exists():
             raise FileNotFoundError(f"模型文件不存在: {model_path}")
         
-        # 加载训练好的YOLOv5模型
+        # 加载训练好的YOLOv5模型,custom是指本地文件，model_path是指本地模型的路径
         self.model = torch.hub.load('ultralytics/yolov5', 'custom', path=model_path)
         
         # 设置模型参数
@@ -224,7 +224,7 @@ class PackagingDetectionSystem:
             
             # 绘制类别标签
             label = f"{class_name} {confidence:.2f}"
-            #text_width, text_height = draw.textsize(label, font=small_font)  #代码报错
+
             # 使用 textbbox 获取文本边界框
             bbox = draw.textbbox((0, 0), label, font=font)
             text_width = bbox[2] - bbox[0]  # right - left
@@ -394,70 +394,14 @@ class PackagingDetectionSystem:
         
         return results
 
-def train_yolov5_model(dataset_path, class_names, epochs=100, batch_size=16, model_size='s'):
-    """
-    训练YOLOv5模型
-    :param dataset_path: 数据集路径
-    :param class_names: 类别名称列表
-    :param epochs: 训练轮数
-    :param batch_size: 批次大小
-    :param model_size: 模型大小 (s, m, l, x)
-    """
-    logger.info("开始训练YOLOv5模型...")
-    
-    # 检查YOLOv5仓库是否存在
-    if not Path('yolov5').exists():
-        logger.info("正在克隆YOLOv5仓库...")
-        os.system('git clone https://github.com/ultralytics/yolov5')
-        os.chdir('yolov5')
-        os.system('conda install -r requirements.txt')
-        os.chdir('..')
-    
-#     # 创建数据集配置文件
-    dataset_yaml = 'dataset.yaml'
-#     with open(dataset_yaml, 'w') as f:
-#         f.write(f"""
-# train: {dataset_path}/images/train
-# val: {dataset_path}/images/val
-#
-# nc: {len(class_names)}
-# names: {class_names}
-# """)
-#
-    str_time=time.strftime('%Y%m%d_%H%M%S')
-    # 构建训练命令
-    train_cmd = (
-        f"python yolov5/train.py "
-        f"--img 640 "
-        f"--batch {batch_size} "
-        f"--epochs {epochs} "
-        f"--data {dataset_yaml} "
-        f"--weights yolov5{model_size}.pt "
-        f"--project packaging_models "
-        f"--name yolov5{model_size}_{str_time} "
-        f"--exist-ok "
-        f"--cache ram "
-        f"--optimizer AdamW "
-        f"--cos-lr "
-    )
-    logger.info(f"执行训练命令: {train_cmd}")
-    logger.info(f"时间1:: {time.strftime('%Y%m%d_%H%M%S')}")
-    os.system(train_cmd)
-    
-    # 查找最佳模型
-    model_dir = Path('packaging_models') / f"yolov5{model_size}_{str_time}"
-    logger.info(f"model_dir:: {model_dir}")
-    best_model = next(model_dir.glob('**/best*.pt'))
-    
-    logger.info(f"训练完成! 最佳模型保存在: {best_model}")
-    return best_model
+
 
 if __name__ == "__main__":
     # 配置参数
     CLASS_NAMES = ['rainbow', 'shell', 'unicorn', 'moon', 'ends']  # 5种包装类型
 
     # 使用预训练模型
-    model_path = "packaging_models/yolov5s_20250601_203307/weights/best.pt"
+    model_path = "packaging_models/best.pt"
     
     #初始化检测系统
     try:
