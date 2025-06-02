@@ -130,6 +130,8 @@ class PackagingDetectionSystem:
         for class_id in detected_class_ids:
             if class_id in class_counts:
                 class_counts[class_id] += 1
+
+        logger.info("分类后的数据："+str(class_counts))
         
         # 检查三个关键条件：
         # 1. 总检测数量是否为5
@@ -139,14 +141,20 @@ class PackagingDetectionSystem:
         total_detections = len(valid_detections)
         unique_classes = set(detected_class_ids)
         
-        # 条件1: 检测到5个物体
-        condition1 = (total_detections == self.num_classes)
+        # 条件1: 检测到5个物体，算上正反面标签就是2*5，实际检测为classes的1/2
+        condition1 = (total_detections == self.num_classes/2)
         
         # 条件2: 检测到5个不同类别
-        condition2 = (len(unique_classes) == self.num_classes)
+        condition2 = (len(unique_classes) == self.num_classes/2)
         
-        # 条件3: 每个类别恰好一个物体
-        condition3 = all(count == 1 for count in class_counts.values())
+        # 条件3: 5个大类别恰好一个物体，正反面算一个类别
+        condition3 = (
+                class_counts[0] + class_counts[5] == 1 and
+                class_counts[1] + class_counts[6] == 1 and
+                class_counts[2] + class_counts[7] == 1 and
+                class_counts[3] + class_counts[8] == 1 and
+                class_counts[4] + class_counts[9] == 1
+        )
         
         # 判断结果
         if condition1 and condition2 and condition3:
@@ -156,10 +164,10 @@ class PackagingDetectionSystem:
             failure_reasons = []
             
             if not condition1:
-                failure_reasons.append(f"物体数量错误: 检测到{total_detections}个, 需要{self.num_classes}个")
+                failure_reasons.append(f"物体数量错误: 检测到{total_detections}个, 需要{self.num_classes/2}个")
             
             if not condition2:
-                failure_reasons.append(f"类别数量错误: 检测到{len(unique_classes)}类, 需要{self.num_classes}类")
+                failure_reasons.append(f"类别数量错误: 检测到{len(unique_classes)}类, 需要{self.num_classes/2}类")
             
             if not condition3:
                 # 找出重复的类别
@@ -319,7 +327,7 @@ class PackagingDetectionSystem:
             return status, str(result_filepath)
         
         except Exception as e:
-            logger.error(f"处理图像时出错: {str(e)}")
+            logger.error(f"处理图像时出错: {str(e)}", exc_info=True)
             return "ERROR", None
 
     def save_results_to_csv(self, image_path, detections, status, output_dir):
@@ -401,7 +409,8 @@ class PackagingDetectionSystem:
 
 if __name__ == "__main__":
     # 配置参数，需要跟样本中的classes.txt中顺序一致
-    CLASS_NAMES = ['rainbow', 'unicorn', 'shell', 'ends', 'moon']  # 5种包装类型
+    CLASS_NAMES \
+        = ['rainbow', 'unicorn', 'shell', 'ends', 'moon', 'rainbow_back', 'unicorn_back', 'shell_back', 'ends_back', 'moon_back']  # 10种包装类型，5*2
 
     #使用预训练模型
     model_path = "packaging_models/best.pt"

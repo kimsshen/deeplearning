@@ -7,13 +7,18 @@ val: images/val                       # 验证集路径 (相对于path)
 #test: images/test                     # 测试集路径 (可选)
 
 # 2. 类别信息
-nc: 5                                 # 类别数量 (number of classes)
+nc: 10                                 # 类别数量 (number of classes)
 names:                                # 类别名称列表
   - 'rainbow'
   - 'unicorn'
   - 'shell'
   - 'ends'
   - 'moon'
+  - 'rainbow_back'
+  - 'unicorn_back'
+  - 'shell_back'
+  - 'ends_back'
+  - 'moon_back'
 
 # 3. 可选高级配置
 img_size: [640, 640]                  # 训练图像尺寸 [宽度, 高度]

@@ -42,7 +42,7 @@ def runPartitionData(images_dir,labels_dir,save_path,split_rate):
 
     print("Totoal num of sample is: " + str(num))
     print("Totoal num of train sample is: " + str(num-len(eval_index)))
-    print("Totoal num of val sample is: " + str(eval_index))
+    print("Totoal num of val sample is: " + str(len(eval_index)))
 
 
 

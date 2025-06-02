@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on 2023-04-01 9:08
+Created on 2025-06-02 9:08
 
-@author: Fan yi ming
+@author: Kim Shen
 
 Func: 对于目标检测的数据增强[YOLO]（特点是数据增强后标签也要更改）
 review：常用的数据增强方式；
