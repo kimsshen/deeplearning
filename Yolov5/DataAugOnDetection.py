@@ -229,7 +229,7 @@ def get_label_file(label_path, image_name):
     return data2
 
 
-def save_Yolo(img, boxes, save_path, prefix, image_name):
+def save_Yolo(img, boxes, save_path, suffix, image_name):
     # img: 需要时Image类型的数据， prefix 前缀
     # 将结果保存到save path指示的路径中
     if not os.path.exists(save_path) or \
@@ -237,8 +237,9 @@ def save_Yolo(img, boxes, save_path, prefix, image_name):
         os.makedirs(os.path.join(save_path, "images"))
         os.makedirs(os.path.join(save_path, "labels"))
     try:
-        img.save(os.path.join(save_path, "images", prefix + image_name))
-        with open(os.path.join(save_path, "labels", prefix + os.path.splitext(image_name)[0] + ".txt"), 'w', encoding="utf-8") as f:
+        base_name, extension = os.path.splitext(image_name)
+        img.save(os.path.join(save_path, "images", base_name + suffix + extension))
+        with open(os.path.join(save_path, "labels", base_name + suffix + ".txt"), 'w', encoding="utf-8") as f:
             if len(boxes) > 0:  # 判断是否为空
                 # 写入新的label到文件中
                 for data in boxes:
@@ -249,8 +250,8 @@ def save_Yolo(img, boxes, save_path, prefix, image_name):
                         else:
                             str_in += " " + str(float(a))
                     f.write(str_in + '\n')
-    except:
-        print("ERROR: ", image_name, " is bad.")
+    except Exception as e:
+        print("ERROR: ", image_name+ ": " + e)
 
 
 def runAugumentation(image_path, label_path, save_path):
@@ -270,13 +271,13 @@ def runAugumentation(image_path, label_path, save_path):
         # save_Yolo(t_img, boxes, save_path, prefix="rs_", image_name=image_name)
         # 水平旋转
         t_img, t_boxes = DAD.random_flip_horizon(img, boxes.clone())
-        save_Yolo(t_img, t_boxes, save_path, prefix="fh_", image_name=image_name)
+        save_Yolo(t_img, t_boxes, save_path, suffix="_fh", image_name=image_name)
         # 竖直旋转
         t_img, t_boxes = DAD.random_flip_vertical(img, boxes.clone())
-        save_Yolo(t_img, t_boxes, save_path, prefix="fv_", image_name=image_name)
+        save_Yolo(t_img, t_boxes, save_path, suffix="_fv", image_name=image_name)
         # center_crop
         t_img, t_boxes = DAD.center_crop(img, boxes.clone(), 1024)
-        save_Yolo(t_img, t_boxes, save_path, prefix="cc_", image_name=image_name)
+        save_Yolo(t_img, t_boxes, save_path, suffix="_cc", image_name=image_name)
 
         """ 图像变换，用tensor类型"""
         to_tensor = transforms.ToTensor()
@@ -285,30 +286,31 @@ def runAugumentation(image_path, label_path, save_path):
 
         # random_bright
         t_img, t_boxes = DAD.random_bright(img.clone()), boxes
-        save_Yolo(to_image(t_img), boxes, save_path, prefix="rb_", image_name=image_name)
+        save_Yolo(to_image(t_img), boxes, save_path, suffix="_rb", image_name=image_name)
         # random_contrast 对比度变化
         t_img, t_boxes = DAD.random_contrast(img.clone()), boxes
-        save_Yolo(to_image(t_img), boxes, save_path, prefix="rc_", image_name=image_name)
+        save_Yolo(to_image(t_img), boxes, save_path, suffix="_rc", image_name=image_name)
         # random_saturation 饱和度变化
         t_img, t_boxes = DAD.random_saturation(img.clone()), boxes
-        save_Yolo(to_image(t_img), boxes, save_path, prefix="rs_", image_name=image_name)
+        save_Yolo(to_image(t_img), boxes, save_path, suffix="_rs", image_name=image_name)
         # 高斯噪声
         t_img, t_boxes = DAD.add_gasuss_noise(img.clone()), boxes
-        save_Yolo(to_image(t_img), boxes, save_path, prefix="gn_", image_name=image_name)
+        save_Yolo(to_image(t_img), boxes, save_path, suffix="_gn", image_name=image_name)
         # add_salt_noise
         t_img, t_boxes = DAD.add_salt_noise(img.clone()), boxes
-        save_Yolo(to_image(t_img), boxes, save_path, prefix="sn_", image_name=image_name)
+        save_Yolo(to_image(t_img), boxes, save_path, suffix="_sn", image_name=image_name)
         # add_pepper_noise
         t_img, t_boxes = DAD.add_pepper_noise(img.clone()), boxes
-        save_Yolo(to_image(t_img), boxes, save_path, prefix="pn_", image_name=image_name)
+        save_Yolo(to_image(t_img), boxes, save_path, suffix="_pn", image_name=image_name)
 
-        print("end:     " + image_name)
+        print("Data aug end: " + image_name)
 
 
 if __name__ == '__main__':
     # 图像和标签文件夹
-    image_path = "./data_origin/images/val"
-    label_path = "./data_origin/labels/val"
-    save_path = "./data_aug_val"    # 结果保存位置路径，可以是一个不存在的文件夹
+    image_path = "./data_origin/images"  #原始样本
+    label_path = "./data_origin/labels"  #原始样本标签
+    save_path = "./data_aug"    # 结果保存位置路径，可以是一个不存在的文件夹
     # 运行
     runAugumentation(image_path, label_path, save_path)
+    print("Complete all the data augmentation!")
