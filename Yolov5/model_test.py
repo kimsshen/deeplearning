@@ -203,8 +203,8 @@ class PackagingDetectionSystem:
             small_font = ImageFont.truetype("simhei.ttf", 24)
         except:
             # 如果无法加载中文字体，使用默认字体
-            font = ImageFont.load_default()
-            small_font = ImageFont.load_default()
+            font = ImageFont.load_default(100)
+            small_font = ImageFont.load_default(80)
         
         # 绘制每个检测框
         for _, det in detections.iterrows():
@@ -400,8 +400,8 @@ class PackagingDetectionSystem:
 
 
 if __name__ == "__main__":
-    # 配置参数
-    CLASS_NAMES = ['rainbow', 'shell', 'unicorn', 'moon', 'ends']  # 5种包装类型
+    # 配置参数，需要跟样本中的classes.txt中顺序一致
+    CLASS_NAMES = ['rainbow', 'unicorn', 'shell', 'ends', 'moon']  # 5种包装类型
 
     #使用预训练模型
     model_path = "packaging_models/best.pt"
@@ -425,8 +425,8 @@ if __name__ == "__main__":
 
     # 批量处理图像
 
-    test_image_dir = Path("./data/images/test")
-    test_image_output_dir = Path("./data/images/test/output")
+    test_image_dir = Path("./predict")
+    test_image_output_dir = Path("./output")
     detector.process_batch(test_image_dir,test_image_output_dir)
 
     logger.info("包装检测流程完成!")

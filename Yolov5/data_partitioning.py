@@ -40,7 +40,9 @@ def runPartitionData(images_dir,labels_dir,save_path,split_rate):
             # 将选中的图像标签复制到labels/val
             copy(label_path, train_labels_dir)
 
-    print("Totoal num of images is: " + str(num))
+    print("Totoal num of sample is: " + str(num))
+    print("Totoal num of train sample is: " + str(num-len(eval_index)))
+    print("Totoal num of val sample is: " + str(eval_index))
 
 
 

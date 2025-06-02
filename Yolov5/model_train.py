@@ -18,11 +18,9 @@ logger = logging.getLogger("PackagingInspector")
 
 
 
-def train_yolov5_model(dataset_path, class_names, epochs=100, batch_size=16, model_size='s'):
+def train_yolov5_model(epochs=100, batch_size=16, model_size='s'):
     """
     训练YOLOv5模型
-    :param dataset_path: 数据集路径
-    :param class_names: 类别名称列表
     :param epochs: 训练轮数
     :param batch_size: 批次大小
     :param model_size: 模型大小 (s, m, l, x)
@@ -70,15 +68,12 @@ def train_yolov5_model(dataset_path, class_names, epochs=100, batch_size=16, mod
     return best_model,model_path
 
 if __name__ == "__main__":
-    # 配置参数
-    CLASS_NAMES = ['rainbow', 'shell', 'unicorn', 'moon', 'ends']  # 5种包装类型
-    
+
+
     # 训练模型 (如果需要)
 
     dataset_path = "data"
     best_model,model_path = train_yolov5_model(
-        dataset_path=dataset_path,
-        class_names=CLASS_NAMES,
         epochs=30,
         batch_size=32,
         model_size='s'
