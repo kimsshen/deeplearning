@@ -6,9 +6,8 @@ import time
 from pathlib import Path
 import pandas as pd
 import logging
-from collections import defaultdict
-import matplotlib.pyplot as plt
-from torchvision import transforms
+import shutil
+
 from PIL import Image, ImageDraw, ImageFont
 
 # 配置日志系统
@@ -406,6 +405,27 @@ class PackagingDetectionSystem:
         return results
 
 
+def quick_empty_directory(directory_path):
+    """
+    快速清空目录 - 删除整个目录后重新创建
+
+    参数:
+        directory_path (str): 要清空的目录路径
+    """
+    if os.path.exists(directory_path):
+        try:
+            # 删除整个目录
+            shutil.rmtree(directory_path)
+            logger.info(f"已删除目录: {directory_path}")
+
+            # 重新创建空目录
+            os.makedirs(directory_path)
+            logger.info(f"已重新创建目录: {directory_path}")
+
+        except Exception as e:
+            logger.error(f"操作失败: {e}")
+    else:
+        logger.info(f"目录不存在: {directory_path}")
 
 if __name__ == "__main__":
     # 配置参数，需要跟样本中的classes.txt中顺序一致
@@ -420,8 +440,8 @@ if __name__ == "__main__":
         detector = PackagingDetectionSystem(
             model_path=model_path,
             class_names=CLASS_NAMES,
-            conf_threshold=0.65,
-            iou_threshold=0.5
+            conf_threshold=0.75,
+            iou_threshold=0.45
         )
     except Exception as e:
         logger.error(f"初始化检测系统失败: {str(e)}")
@@ -433,9 +453,12 @@ if __name__ == "__main__":
     # logger.info(f"单张图像检测结果: {status}")
 
     # 批量处理图像
-
     test_image_dir = Path("./predict")
     test_image_output_dir = Path("./output")
-    detector.process_batch(test_image_dir,test_image_output_dir)
+
+    #清理output目录
+    quick_empty_directory(test_image_output_dir)
+
+    detector.process_batch(test_image_dir, test_image_output_dir)
 
     logger.info("包装检测流程完成!")

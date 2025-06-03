@@ -74,7 +74,7 @@ if __name__ == "__main__":
 
     dataset_path = "data"
     best_model,model_path = train_yolov5_model(
-        epochs=30,
+        epochs=100,
         batch_size=32,
         model_size='s'
     )
