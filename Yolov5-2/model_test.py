@@ -141,18 +141,18 @@ class PackagingDetectionSystem:
         unique_classes = set(detected_class_ids)
         
         # 条件1: 检测到5个物体，算上正反面标签就是2*5，实际检测为classes的1/2
-        condition1 = (total_detections == self.num_classes/2)
+        condition1 = (total_detections == 5)
         
         # 条件2: 检测到5个不同类别
-        condition2 = (len(unique_classes) == self.num_classes/2)
+        condition2 = (len(unique_classes) == 5)
         
         # 条件3: 5个大类别恰好一个物体，正反面算一个类别
         condition3 = (
-                class_counts[0] + class_counts[5] == 1 and
-                class_counts[1] + class_counts[6] == 1 and
-                class_counts[2] + class_counts[7] == 1 and
-                class_counts[3] + class_counts[8] == 1 and
-                class_counts[4] + class_counts[9] == 1
+                class_counts[0] + class_counts[1] == 1 and
+                class_counts[2] + class_counts[3] == 1 and
+                class_counts[4] + class_counts[5] == 1 and
+                class_counts[6] + class_counts[7] == 1 and
+                class_counts[8] == 1
         )
         
         # 判断结果
@@ -430,7 +430,7 @@ def quick_empty_directory(directory_path):
 if __name__ == "__main__":
     # 配置参数，需要跟样本中的classes.txt中顺序一致
     CLASS_NAMES \
-        = ['rainbow', 'unicorn', 'shell', 'ends', 'moon', 'rainbow_back', 'unicorn_back', 'shell_back', 'ends_back', 'moon_back']  # 10种包装类型，5*2
+        = ['bone_front', 'bone_back', 'fish_front', 'fish_back', 'hedgehog_front', 'hedgehog_back', 'heart_front', 'heart_back', 'paw']  # 10种包装类型，4*2+1
 
     #使用预训练模型
     model_path = "packaging_models/best.pt"

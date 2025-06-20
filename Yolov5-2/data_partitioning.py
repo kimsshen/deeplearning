@@ -1,4 +1,5 @@
 import os
+import shutil
 from shutil import copy
 import random
 
@@ -52,6 +53,15 @@ if __name__ == '__main__':
     label_path = "./data_aug/labels"  #增强后的样本标签
     save_path = "./data"    # 结果保存位置路径，可以是一个不存在的文件夹
 
+    #清理目录
+    try:
+        # 递归删除目录及其所有内容
+        shutil.rmtree(save_path)
+        print(f"成功删除目录: {save_path}")
+    except Exception as e:
+        print(f"未知错误: {e}")
+
+    #验证集的比例为1/10
     split_rate=0.1
 
     print("Start the data partition!")

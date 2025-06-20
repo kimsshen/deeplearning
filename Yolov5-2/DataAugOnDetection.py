@@ -24,6 +24,7 @@ from torchvision import transforms
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import shutil
 import random
 random.seed(0)
 
@@ -311,6 +312,14 @@ if __name__ == '__main__':
     image_path = "./data_origin/images"  #原始样本
     label_path = "./data_origin/labels"  #原始样本标签
     save_path = "./data_aug"    # 结果保存位置路径，可以是一个不存在的文件夹
+    #清理目录
+    try:
+        # 递归删除目录及其所有内容
+        shutil.rmtree(save_path)
+        print(f"成功删除目录: {save_path}")
+    except Exception as e:
+        print(f"未知错误: {e}")
+
     # 运行
     runAugumentation(image_path, label_path, save_path)
     print("Complete all the data augmentation!")
