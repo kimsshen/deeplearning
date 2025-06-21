@@ -22,7 +22,7 @@ logging.basicConfig(
 logger = logging.getLogger("PackagingInspector")
 
 class PackagingDetectionSystem:
-    def __init__(self, model_path, class_names, conf_threshold=0.6, iou_threshold=0.45):
+    def __init__(self, model_path, class_names, class_mapping, object_class_names, conf_threshold=0.6, iou_threshold=0.45):
         """
         初始化包装检测系统
         :param model_path: 训练好的模型权重路径
@@ -44,7 +44,10 @@ class PackagingDetectionSystem:
         self.model.conf = conf_threshold  # 置信度阈值
         self.model.iou = iou_threshold    # IOU阈值
         self.class_names = class_names    # 类别名称
+        self.class_mapping = class_mapping  #类别映射关系
+        self.object_class_names = object_class_names #不区分正反面的物体类别名称
         self.num_classes = len(class_names)  # 类别数量
+       
         
         # 设置设备（自动选择GPU或CPU）
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -125,69 +128,68 @@ class PackagingDetectionSystem:
         detected_class_ids = valid_detections['class'].astype(int).tolist()
         
         # 统计每个类别的检测数量
-        class_counts = {class_id: 0 for class_id in range(self.num_classes)}
+        class_counts={}
+        for item in self.class_names:
+            class_counts[item] = 0
         for class_id in detected_class_ids:
-            if class_id in class_counts:
-                class_counts[class_id] += 1
+            single_class_name = self.class_names[class_id]
+            if single_class_name in class_counts:
+                class_counts[single_class_name] += 1
+        logger.info("不去分正反面分类后的数据：" + str(class_counts))
 
-        logger.info("分类后的数据："+str(class_counts))
+        # 统计每个类别（不区分正反面）的检测数量
+        object_class_counts = {}
+        for item in self.object_class_names:
+            object_class_counts[item] = 0
+        for key, value in class_counts.items():
+            # 获取映射后的物体类别名
+            object_class_name = self.class_mapping.get(key)
+            if object_class_name in object_class_counts:
+                #映射后为同一类物体的药+1
+                object_class_counts[object_class_name] = object_class_counts[object_class_name] + value
+        logger.info("按照物体种类分类后的数据："+str(object_class_counts))
         
         # 检查三个关键条件：
         # 1. 总检测数量是否为5
         # 2. 是否检测到5个不同类别
-        # 3. 每个类别是否恰好检测到1个物体
         
         total_detections = len(valid_detections)
-        unique_classes = set(detected_class_ids)
         
         # 条件1: 检测到5个物体，算上正反面标签就是2*5，实际检测为classes的1/2
         condition1 = (total_detections == 5)
         
-        # 条件2: 检测到5个不同类别
-        condition2 = (len(unique_classes) == 5)
-        
-        # 条件3: 5个大类别恰好一个物体，正反面算一个类别
-        condition3 = (
-                class_counts[0] + class_counts[1] == 1 and
-                class_counts[2] + class_counts[3] == 1 and
-                class_counts[4] + class_counts[5] == 1 and
-                class_counts[6] + class_counts[7] == 1 and
-                class_counts[8] == 1
-        )
+        # 条件2: 5个大类别恰好每类一个物体，正反面算一个类别
+        condition2 = all(value == 1 for value in object_class_counts.values())
         
         # 判断结果
-        if condition1 and condition2 and condition3:
-            return "OK", "所有条件满足", class_counts
+        if condition1 and condition2:
+            return "OK", "所有条件满足", object_class_counts
         else:
             # 详细记录不符合条件的原因
             failure_reasons = []
             
             if not condition1:
-                failure_reasons.append(f"物体数量错误: 检测到{total_detections}个, 需要{self.num_classes/2}个")
+                failure_reasons.append(f"物体数量错误: 检测到{total_detections}个物体, 需要{len(self.object_class_names)}个")
             
-            if not condition2:
-                failure_reasons.append(f"类别数量错误: 检测到{len(unique_classes)}类, 需要{self.num_classes/2}类")
+            if condition1 and not condition2:
+                failure_reasons.append(f"物体种类错误: 检测到{total_detections}个,但是有重复种类")
+
+            # 找出重复的类别
+            duplicate_classes=[]
+            # 找出缺失的类别
+            missing_classes=[]
+            for key,value in object_class_counts.items():
+                if(value > 1):
+                    duplicate_classes.append(key)
+                if(value == 0):
+                    missing_classes.append(key)
+             
+            if duplicate_classes:
+                failure_reasons.append(f"\n重复类别: {', '.join(duplicate_classes)}")
+            if missing_classes:
+                failure_reasons.append(f"\n缺失类别: {', '.join(missing_classes)}")
             
-            if not condition3:
-                # 找出重复的类别
-                duplicate_classes = [
-                    self.class_names[cls] 
-                    for cls, count in class_counts.items() 
-                    if count > 1
-                ]
-                # 找出缺失的类别
-                missing_classes = [
-                    self.class_names[cls] 
-                    for cls, count in class_counts.items() 
-                    if count == 0
-                ]
-                
-                if duplicate_classes:
-                    failure_reasons.append(f"重复类别: {', '.join(duplicate_classes)}")
-                if missing_classes:
-                    failure_reasons.append(f"缺失类别: {', '.join(missing_classes)}")
-            
-            return "NG", "; ".join(failure_reasons), class_counts
+            return "NG", "; ".join(failure_reasons), object_class_counts
 
     def visualize_results(self, image, detections, status, message, class_counts):
         """
@@ -206,8 +208,8 @@ class PackagingDetectionSystem:
         # 设置字体
         try:
             # 尝试加载中文字体 (需要系统中存在该字体)
-            font = ImageFont.truetype("simhei.ttf", 30)
-            small_font = ImageFont.truetype("simhei.ttf", 24)
+            font = ImageFont.truetype("simhei.ttf", 40)
+            small_font = ImageFont.truetype("simhei.ttf", 30)
         except:
             # 如果无法加载中文字体，使用默认字体
             font = ImageFont.load_default(100)
@@ -251,38 +253,36 @@ class PackagingDetectionSystem:
                 (x1, y1 - text_height - 5), 
                 label, 
                 fill=(255, 255, 255), 
-                font=small_font
+                font=font
             )
         
         # 添加状态文本
         status_color = (0, 200, 0) if status == "OK" else (255, 0, 0)
-        draw.text((20, 20), f"状态: {status} - {message}", fill=status_color, font=font)
+        draw.text((50, 50), f"检测结果: {status}", fill=status_color, font=font)
         
         # 添加类别统计信息
-        stats_y = 60
-        for class_id, count in class_counts.items():
-            class_name = self.class_names[class_id]
-            required = "✓" if count == 1 else "✗"
+        stats_y = 100
+        for class_name, count in class_counts.items():
+            required = "ok" if count == 1 else "ng"
             color = (0, 200, 0) if count == 1 else (255, 0, 0)
             
             stats_text = f"{class_name}: {count}个 ({required})"
-            draw.text((20, stats_y), stats_text, fill=color, font=small_font)
-            stats_y += 35
+            draw.text((50, stats_y), stats_text, fill=color, font=font)
+            stats_y += 50
         
         # 添加总检测数量
         total_detections = len(detections)
-        required_text = "✓" if total_detections == self.num_classes else "✗"
-        total_color = (0, 200, 0) if total_detections == self.num_classes else (255, 0, 0)
+
         draw.text(
-            (20, stats_y + 10), 
-            f"总检测数: {total_detections}个 ({required_text})", 
-            fill=total_color, 
+            (50, stats_y + 20),
+            f"总检测数: {total_detections}个 ({status}- {message})",
+            fill=status_color,
             font=font
         )
         
         # 添加时间戳
         timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-        draw.text((20, pil_img.height - 40), timestamp, fill=(200, 200, 200), font=small_font)
+        draw.text((50, pil_img.height - 60), timestamp, fill=(200, 200, 200), font=small_font)
         
         # 转换回numpy数组
         return np.array(pil_img)
@@ -323,7 +323,7 @@ class PackagingDetectionSystem:
             # 保存检测结果到CSV
             self.save_results_to_csv(image_path, detections, status, output_path)
             
-            return status, str(result_filepath)
+            return status, str(result_filepath) ,message
         
         except Exception as e:
             logger.error(f"处理图像时出错: {str(e)}", exc_info=True)
@@ -428,9 +428,24 @@ def quick_empty_directory(directory_path):
         logger.info(f"目录不存在: {directory_path}")
 
 if __name__ == "__main__":
-    # 配置参数，需要跟样本中的classes.txt中顺序一致
-    CLASS_NAMES \
-        = ['bone_front', 'bone_back', 'fish_front', 'fish_back', 'hedgehog_front', 'hedgehog_back', 'heart_front', 'heart_back', 'paw']  # 10种包装类型，4*2+1
+    # 配置参数，需要跟样本中的classes.txt中顺序一致，区分正反面种类
+    CLASS_NAMES = ['bone_front', 'bone_back',\
+                    'fish_front', 'fish_back', \
+                    'hedgehog_front', 'hedgehog_back', \
+                    'heart_front', 'heart_back', \
+                    'paw']  # 9种包装类型，4*2+1\n\n    
+    # 定义映射字典\n    
+    CLASS_MAPPING = { 'bone_front': 'bone','bone_back': 'bone',\
+                    'fish_front': 'fish','fish_back': 'fish',\
+                    'hedgehog_front': 'hedgehog','hedgehog_back': 'hedgehog',\
+                    'heart_front': 'heart','heart_back': 'heart',\
+                    'paw': 'paw' }
+
+    OBJECT_CLASS_NAMES = ['bone', 
+                        'fish', \
+                        'hedgehog', \
+                        'heart', \
+                        'paw']
 
     #使用预训练模型
     model_path = "packaging_models/best.pt"
@@ -440,25 +455,27 @@ if __name__ == "__main__":
         detector = PackagingDetectionSystem(
             model_path=model_path,
             class_names=CLASS_NAMES,
+            class_mapping=CLASS_MAPPING,
+            object_class_names=OBJECT_CLASS_NAMES,
             conf_threshold=0.75,
-            iou_threshold=0.45
+            iou_threshold=0.25
         )
     except Exception as e:
         logger.error(f"初始化检测系统失败: {str(e)}")
         exit(1)
 
     # 处理单个图像
-    # test_image = "测试图像/包装检测1.jpg"
-    # status, result_path = detector.process_image(test_image)
-    # logger.info(f"单张图像检测结果: {status}")
+    test_image = "./Image/HIK_20250621_134234.jpg"
+    status, result_path, message = detector.process_image(test_image)
+    logger.info(f"单张图像检测结果: {status}，详细信息：{message}")
 
     # 批量处理图像
-    test_image_dir = Path("./predict")
-    test_image_output_dir = Path("./output")
+    # test_image_dir = Path("./predict")
+    # test_image_output_dir = Path("./output")
 
     #清理output目录
-    quick_empty_directory(test_image_output_dir)
-
-    detector.process_batch(test_image_dir, test_image_output_dir)
+    # quick_empty_directory(test_image_output_dir)
+    #
+    # detector.process_batch(test_image_dir, test_image_output_dir)
 
     logger.info("包装检测流程完成!")
