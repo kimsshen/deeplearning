@@ -5,7 +5,6 @@
 #注释文件
 *.jpg
 *.txt
-*.yaml
 *.png
 *.csv
 *.log
