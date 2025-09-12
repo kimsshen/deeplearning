@@ -7,17 +7,12 @@ val: images/val                       # 验证集路径 (相对于path)
 #test: images/test                     # 测试集路径 (可选)
 
 # 2. 类别信息
-nc: 9                                 # 类别数量 (number of classes)
+nc: 4                                 # 类别数量 (number of classes)
 names:                                # 类别名称列表
-  - 'bone_front'
-  - 'bone_back'
-  - 'fish_front'
-  - 'fish_back'
-  - 'hedgehog_front'
-  - 'hedgehog_back'
-  - 'heart_front'
-  - 'heart_back'
-  - 'paw'
+  - 'Blistering'
+  - 'Cloudiness'
+  - 'OrangePeel'
+  - 'Scrape'
 
 
 # 3. 可选高级配置

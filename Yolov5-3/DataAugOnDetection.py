@@ -291,9 +291,9 @@ def runAugumentation(image_path, label_path, save_path):
         # random_contrast 对比度变化
         t_img, t_boxes = DAD.random_contrast(img.clone()), boxes
         save_Yolo(to_image(t_img), boxes, save_path, suffix="_rc", image_name=image_name)
-        # random_saturation 饱和度变化
-        t_img, t_boxes = DAD.random_saturation(img.clone()), boxes
-        save_Yolo(to_image(t_img), boxes, save_path, suffix="_rs", image_name=image_name)
+        # random_saturation 饱和度变化,灰度图不能执行饱和度
+        #t_img, t_boxes = DAD.random_saturation(img.clone()), boxes
+        #save_Yolo(to_image(t_img), boxes, save_path, suffix="_rs", image_name=image_name)
         # 高斯噪声
         t_img, t_boxes = DAD.add_gasuss_noise(img.clone()), boxes
         save_Yolo(to_image(t_img), boxes, save_path, suffix="_gn", image_name=image_name)

@@ -2,7 +2,7 @@ import os
 import shutil
 from shutil import copy
 import random
-
+import cv2
 
 def mkdir(dir):
     if not os.path.exists(dir):
@@ -30,20 +30,31 @@ def runPartitionData(images_dir,labels_dir,save_path,split_rate):
         # eval_index 中保存验证集val的图像名称
         if image in eval_index:
             # 将选中的图像复制到images/val
-            copy(image_path, val_images_dir)
+            transferImg(image_path,val_images_dir+'/'+image)
             # 将选中的图像标签复制到labels/val
             copy(label_path, val_labels_dir)
 
         # 其余的图像保存在训练集train中
         else:
             # 将选中的图像复制到images/val
-            copy(image_path, train_images_dir)
+            transferImg(image_path, train_images_dir + '/' + image)
             # 将选中的图像标签复制到labels/val
             copy(label_path, train_labels_dir)
 
     print("Totoal num of sample is: " + str(num))
     print("Totoal num of train sample is: " + str(num-len(eval_index)))
     print("Totoal num of val sample is: " + str(len(eval_index)))
+
+
+def transferImg(gray_img_path,rgb_img_path):
+    # 1. 读取灰度图（强制按灰度读，避免意外）
+    img_gray = cv2.imread(gray_img_path, cv2.IMREAD_GRAYSCALE)
+
+    # 2. 转为三通道 RGB（实际上是 R=G=B=灰度值）
+    img_rgb = cv2.cvtColor(img_gray, cv2.COLOR_GRAY2RGB)
+
+    # 3. 保存为新图片（默认保存为 BGR，但视觉效果一样）
+    cv2.imwrite(rgb_img_path, img_rgb)
 
 
 
