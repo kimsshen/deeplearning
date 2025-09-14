@@ -18,7 +18,7 @@ logger = logging.getLogger("PackagingInspector")
 
 
 
-def train_yolov5_model(epochs=100, batch_size=16, model_size='s'):
+def train_yolov5_model(epochs=100, img_size=640,batch_size=16, model_size='s'):
     """
     训练YOLOv5模型
     :param epochs: 训练轮数
@@ -38,11 +38,14 @@ def train_yolov5_model(epochs=100, batch_size=16, model_size='s'):
 #     # 创建数据集配置文件
     dataset_yaml = 'dataset.yaml'
 
+
+
+
     str_time=time.strftime('%Y%m%d_%H%M%S')
     # 构建训练命令
     train_cmd = (
         f"python yolov5/train.py "
-        f"--img 640 "
+        f"--img {img_size} "
         f"--batch {batch_size} "
         f"--epochs {epochs} "
         f"--data {dataset_yaml} "
@@ -75,6 +78,7 @@ if __name__ == "__main__":
     dataset_path = "data"
     best_model,model_path = train_yolov5_model(
         epochs=100,
+        img_size=1280,
         batch_size=32,
         model_size='s'
     )
