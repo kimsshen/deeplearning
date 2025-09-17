@@ -77,10 +77,10 @@ if __name__ == "__main__":
 
     dataset_path = "data"
     best_model,model_path = train_yolov5_model(
-        epochs=100,
+        epochs=200,
         img_size=1280,
-        batch_size=32,
-        model_size='s'
+        batch_size=8,
+        model_size='m'
     )
     logger.info(f"训练完成! 最佳模型保存在: {best_model}"+ f",模型拷贝至: {model_path}")
 
